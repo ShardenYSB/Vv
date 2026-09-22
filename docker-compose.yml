@@ -1,0 +1,31 @@
+services:
+  telegram-bot:
+    build: .
+    env_file: .env
+    depends_on: [postgres, redis]
+    restart: unless-stopped
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-opbot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-opbot}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+  redis:
+    image: redis:7-alpine
+    volumes: [redis_data:/data]
+  migrate:
+    image: postgres:16-alpine
+    env_file: .env
+    depends_on: [postgres]
+    volumes:
+      - ./migrations:/migrations:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command: >
+      until pg_isready -h postgres -U "$${POSTGRES_USER:-opbot}" -d "$${POSTGRES_DB:-opbot}"; do sleep 1; done;
+      for migration in /migrations/*.sql; do
+        psql -v ON_ERROR_STOP=1 -h postgres -U "$${POSTGRES_USER:-opbot}" -d "$${POSTGRES_DB:-opbot}" -f "$$migration";
+      done
+volumes:
+  postgres_data:
+  redis_data:
