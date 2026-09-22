@@ -45,3 +45,8 @@ async def _sponsors_send_exclusions_filter_pinned_and_report_bad():
     assert client.request == {"chat_id": 42, "max_op": 15, "only_has_check": True, "excluded_ids": ["blocked"]}
     assert [task["resource_id"] for task in tasks] == ["valid"]
     assert reports == [("https://invalid.example/a", "bad", 42, "unknown_telegram_link")]
+
+from op_bot.rewards import get_referral_reward
+
+def test_referral_rewards_follow_configured_ranges():
+    assert [get_referral_reward(value) for value in (0, 2, 3, 5, 6, 8, 9, 15, 16, 20, 21)] == [0, 0, 1, 1, 2, 2, 3, 3, 5, 5, 0]

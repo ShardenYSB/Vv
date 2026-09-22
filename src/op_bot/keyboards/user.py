@@ -7,3 +7,7 @@ def sponsors(tasks: list[dict]) -> InlineKeyboardMarkup:
  return InlineKeyboardMarkup(inline_keyboard=[*rows,[InlineKeyboardButton(text='🔄 Проверить подписки', callback_data='sponsors:check')]])
 def task(url: str) -> InlineKeyboardMarkup:
  return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='📢 Выполнить задание',url=url)],[InlineKeyboardButton(text='✅ Проверить',callback_data='task:check')],[InlineKeyboardButton(text='⏭ Пропустить',callback_data='task:skip')],[InlineKeyboardButton(text='⬅️ Назад',callback_data='home')]])
+def back() -> InlineKeyboardMarkup:
+ return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='⬅️ Назад', callback_data='home')]])
+def referrals(share_text: str) -> InlineKeyboardMarkup:
+ return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='📤 Пригласить друга',switch_inline_query=share_text)],[InlineKeyboardButton(text='⬅️ Назад',callback_data='home')]])

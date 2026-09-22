@@ -26,9 +26,11 @@ async def _sponsor_screen(target: Message | CallbackQuery, service: BotoHubServi
  return await target.answer(f'🔐 Для доступа к боту необходимо выполнить обязательные подписки.\n\n{status}\n\nПосле подписки нажмите кнопку проверки.',reply_markup=sponsors(tasks))
 
 @router.message(CommandStart())
-async def start(message: Message, botohub: BotoHubService):
- log.info('USER_REGISTERED user_id=%s referrer=%s',message.from_user.id,_start_referral(message.text,message.from_user.id))
- await _sponsor_screen(message,botohub,message.from_user.id)
+async def start(message: Message, botohub: BotoHubService, users):
+ referrer = _start_referral(message.text, message.from_user.id)
+ await users.register(message.from_user.id, message.from_user.username, message.from_user.first_name, referrer)
+ log.info('USER_REGISTERED user_id=%s referrer=%s', message.from_user.id, referrer)
+ await _sponsor_screen(message, botohub, message.from_user.id)
 @router.callback_query(F.data == 'sponsors:check')
 async def check_sponsors(callback: CallbackQuery, botohub: BotoHubService):
  await callback.answer(); await _sponsor_screen(callback.message,botohub,callback.from_user.id)
@@ -43,3 +45,21 @@ async def get_task(callback: CallbackQuery, botohub: BotoHubService):
  url=result.get('url')
  if not url: await callback.message.edit_text('🎯 Все задания выполнены.',reply_markup=main_menu()); return
  await callback.message.edit_text(f"🎯 Задание\n\n⭐ Награда: {result.get('reward', 0)} ⭐\n\nПосле выполнения нажмите «Проверить».",reply_markup=task(url)); await callback.answer()
+
+@router.callback_query(F.data == 'profile')
+async def profile(callback: CallbackQuery, users):
+ try:
+  user, referrals_count, tasks_count, referral_earned = await users.profile(callback.from_user.id)
+ except LookupError:
+  await callback.answer('Нажмите /start', show_alert=True); return
+ await callback.message.edit_text(f'👤 Ваш профиль\n\n🆔 ID: {user.telegram_id}\n\n⭐ Stars: {user.stars_balance}\n👥 Рефералов: {referrals_count}\n\n🎯 Выполнено заданий: {tasks_count}\n\n🏆 Получено за рефералов: {referral_earned} ⭐', reply_markup=main_menu())
+ await callback.answer()
+
+@router.callback_query(F.data == 'referrals')
+async def referrals_screen(callback: CallbackQuery, users):
+ from op_bot.keyboards.user import referrals
+ try: user, count, _, earned = await users.profile(callback.from_user.id)
+ except LookupError: await callback.answer('Нажмите /start', show_alert=True); return
+ me=await callback.bot.get_me(); link=f'https://t.me/{me.username}?start=ref_{user.telegram_id}'
+ await callback.message.edit_text(f'👥 Реферальная система\n\nПриглашай друзей и получай Stars.\n\n🔗 Твоя ссылка:\n{link}\n\n👤 Приглашено: {count}\n⭐ Заработано: {earned}',reply_markup=referrals(f'Присоединяйся: {link}'))
+ await callback.answer()

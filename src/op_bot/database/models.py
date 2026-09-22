@@ -12,3 +12,11 @@ class Task(Base):
  __tablename__='tasks'; __table_args__=(UniqueConstraint('user_id','resource_id'),); id: Mapped[int]=mapped_column(BigInteger,primary_key=True); user_id: Mapped[int]=mapped_column(ForeignKey('users.id')); resource_id: Mapped[str]=mapped_column(String); url: Mapped[str]=mapped_column(Text); status: Mapped[str]=mapped_column(String(32),default='received'); reward: Mapped[int]=mapped_column(Integer,default=0); rewarded: Mapped[bool]=mapped_column(Boolean,default=False)
 class StarTransaction(Base):
  __tablename__='star_transactions'; id: Mapped[int]=mapped_column(BigInteger,primary_key=True); user_id: Mapped[int]=mapped_column(ForeignKey('users.id')); amount: Mapped[int]=mapped_column(Integer); type: Mapped[str]=mapped_column(String(16)); source_id: Mapped[str|None]=mapped_column(String); description: Mapped[str]=mapped_column(Text)
+class BlockedResourceModel(Base):
+ __tablename__='blocked_resources'
+ id: Mapped[int]=mapped_column(BigInteger,primary_key=True)
+ resource_id: Mapped[str]=mapped_column(String)
+ url: Mapped[str]=mapped_column(Text)
+ reason: Mapped[str|None]=mapped_column(Text)
+ blocked_by: Mapped[int]=mapped_column(BigInteger)
+ is_active: Mapped[bool]=mapped_column(Boolean,default=True)
