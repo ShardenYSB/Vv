@@ -47,6 +47,30 @@ async def _sponsors_send_exclusions_filter_pinned_and_report_bad():
     assert reports == [("https://invalid.example/a", "bad", 42, "unknown_telegram_link")]
 
 from op_bot.rewards import get_referral_reward
+from op_bot.config import Settings
 
 def test_referral_rewards_follow_configured_ranges():
     assert [get_referral_reward(value) for value in (0, 2, 3, 5, 6, 8, 9, 15, 16, 20, 21)] == [0, 0, 1, 1, 2, 2, 3, 3, 5, 5, 0]
+
+
+def test_settings_rejects_unfilled_example_values(monkeypatch):
+    monkeypatch.setenv("BOT_TOKEN", "CHANGE_ME_PASTE_BOTFATHER_TOKEN_HERE")
+    monkeypatch.setenv("BOTOHUB_TOKEN", "real-token")
+    monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://localhost/db")
+    try:
+        Settings.from_env()
+    except RuntimeError as error:
+        assert "BOT_TOKEN" in str(error)
+    else:
+        raise AssertionError("placeholder configuration must be rejected")
+
+
+def test_settings_parses_admins_and_max_op(monkeypatch):
+    monkeypatch.setenv("BOT_TOKEN", "telegram-token")
+    monkeypatch.setenv("BOTOHUB_TOKEN", "hub-token")
+    monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://localhost/db")
+    monkeypatch.setenv("ADMIN_IDS", " 100,200 ")
+    monkeypatch.setenv("MAX_OP", "15")
+    settings = Settings.from_env()
+    assert settings.admin_ids == frozenset({100, 200})
+    assert settings.max_op == 15

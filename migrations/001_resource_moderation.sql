@@ -1,5 +1,5 @@
 -- PostgreSQL schema for moderation and auditable inline administration.
-CREATE TABLE blocked_resources (
+CREATE TABLE IF NOT EXISTS blocked_resources (
     id BIGSERIAL PRIMARY KEY,
     resource_id TEXT NOT NULL,
     url TEXT NOT NULL,
@@ -8,9 +8,9 @@ CREATE TABLE blocked_resources (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
-CREATE UNIQUE INDEX blocked_resources_active_resource_id_idx ON blocked_resources (resource_id) WHERE is_active;
+CREATE UNIQUE INDEX IF NOT EXISTS blocked_resources_active_resource_id_idx ON blocked_resources (resource_id) WHERE is_active;
 
-CREATE TABLE unresolved_resources (
+CREATE TABLE IF NOT EXISTS unresolved_resources (
     id BIGSERIAL PRIMARY KEY,
     url TEXT NOT NULL,
     resource_id TEXT,
@@ -22,7 +22,7 @@ CREATE TABLE unresolved_resources (
     resolved_by BIGINT
 );
 
-CREATE TABLE admin_logs (
+CREATE TABLE IF NOT EXISTS admin_logs (
     id BIGSERIAL PRIMARY KEY,
     admin_id BIGINT NOT NULL,
     action TEXT NOT NULL,

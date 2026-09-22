@@ -29,6 +29,10 @@ class BotoHubService:
 
     async def get_sponsors(self, chat_id: int, max_op: int = 20, excluded_ids: list[str] | None = None) -> dict[str, Any]:
         return await self._post("/get-tasks-extended", {"chat_id": chat_id, "max_op": max_op, "only_has_check": True, "excluded_ids": excluded_ids or []})
+
+    async def get_tasks_extended(self, **kwargs: Any) -> dict[str, Any]:
+        """Protocol-compatible name used by SponsorService."""
+        return await self._post("/get-tasks-extended", kwargs)
     async def check_sponsors(self, chat_id: int, max_op: int = 20, excluded_ids: list[str] | None = None) -> dict[str, Any]:
         return await self.get_sponsors(chat_id, max_op, excluded_ids)
     async def get_task(self, chat_id: int, skip: bool = False) -> dict[str, Any]:
