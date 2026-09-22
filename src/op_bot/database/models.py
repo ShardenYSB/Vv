@@ -20,3 +20,13 @@ class BlockedResourceModel(Base):
  reason: Mapped[str|None]=mapped_column(Text)
  blocked_by: Mapped[int]=mapped_column(BigInteger)
  is_active: Mapped[bool]=mapped_column(Boolean,default=True)
+ created_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=func.now())
+class AdminLog(Base):
+ __tablename__='admin_logs'
+ id: Mapped[int]=mapped_column(BigInteger,primary_key=True)
+ admin_id: Mapped[int]=mapped_column(BigInteger)
+ action: Mapped[str]=mapped_column(String)
+ target_type: Mapped[str]=mapped_column(String)
+ target_id: Mapped[str]=mapped_column(String)
+ old_value: Mapped[str|None]=mapped_column(Text)
+ new_value: Mapped[str|None]=mapped_column(Text)

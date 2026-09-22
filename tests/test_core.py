@@ -48,6 +48,8 @@ async def _sponsors_send_exclusions_filter_pinned_and_report_bad():
 
 from op_bot.rewards import get_referral_reward
 from op_bot.config import Settings
+from op_bot.admin_ui import admin_home
+from op_bot.keyboards.admin import screen_markup
 
 def test_referral_rewards_follow_configured_ranges():
     assert [get_referral_reward(value) for value in (0, 2, 3, 5, 6, 8, 9, 15, 16, 20, 21)] == [0, 0, 1, 1, 2, 2, 3, 3, 5, 5, 0]
@@ -74,3 +76,10 @@ def test_settings_parses_admins_and_max_op(monkeypatch):
     settings = Settings.from_env()
     assert settings.admin_ids == frozenset({100, 200})
     assert settings.max_op == 15
+
+
+def test_admin_dashboard_is_an_inline_keyboard():
+    screen = admin_home(users=1, referrals=2, stars=3, tasks=4, blocked=5)
+    markup = screen_markup(screen)
+    assert "Пользователей: 1" in screen.text
+    assert any(button.callback_data == "admin:blocked" for row in markup.inline_keyboard for button in row)

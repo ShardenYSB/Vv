@@ -29,16 +29,16 @@ def _start_referral(text: str | None, user_id: int) -> int | None:
     return None if referrer == user_id else referrer
 
 
-async def _show_home(message: Message, users, telegram_id: int, *, edit: bool) -> None:
+async def _show_home(message: Message, users, telegram_id: int, *, edit: bool, settings) -> None:
     user, referrals_count, tasks_count, _ = await users.profile(telegram_id)
     text = f"👋 Добро пожаловать!\n\n⭐ Баланс: {user.stars_balance} Stars\n👥 Рефералов: {referrals_count}\n🎯 Выполнено заданий: {tasks_count}"
     if edit:
-        await message.edit_text(text, reply_markup=main_menu())
+        await message.edit_text(text, reply_markup=main_menu(telegram_id in settings.admin_ids))
     else:
-        await message.answer(text, reply_markup=main_menu())
+        await message.answer(text, reply_markup=main_menu(telegram_id in settings.admin_ids))
 
 
-async def _sponsor_screen(message: Message, sponsor_service: SponsorService, users, user_id: int, *, edit: bool) -> None:
+async def _sponsor_screen(message: Message, sponsor_service: SponsorService, users, user_id: int, *, edit: bool, settings) -> None:
     try:
         sponsor_tasks = await sponsor_service.get_sponsors(user_id)
     except BotoHubError:
@@ -50,7 +50,7 @@ async def _sponsor_screen(message: Message, sponsor_service: SponsorService, use
         return
     if not sponsor_tasks or all(item.get("completed") for item in sponsor_tasks):
         reward = await users.confirm_referral_after_sponsors(user_id, len(sponsor_tasks))
-        await _show_home(message, users, user_id, edit=edit)
+        await _show_home(message, users, user_id, edit=edit, settings=settings)
         if reward:
             await message.answer(f"🎉 Ваш пригласивший получил {reward} ⭐ за выполненные вами подписки.")
         return
@@ -63,24 +63,24 @@ async def _sponsor_screen(message: Message, sponsor_service: SponsorService, use
 
 
 @router.message(CommandStart())
-async def start(message: Message, sponsor_service: SponsorService, users) -> None:
+async def start(message: Message, sponsor_service: SponsorService, users, settings) -> None:
     if not message.from_user:
         return
     referrer = _start_referral(message.text, message.from_user.id)
     await users.register(message.from_user.id, message.from_user.username, message.from_user.first_name, referrer)
     log.info("USER_REGISTERED user_id=%s referrer=%s", message.from_user.id, referrer)
-    await _sponsor_screen(message, sponsor_service, users, message.from_user.id, edit=False)
+    await _sponsor_screen(message, sponsor_service, users, message.from_user.id, edit=False, settings=settings)
 
 
 @router.callback_query(F.data == "sponsors:check")
-async def check_sponsors(callback: CallbackQuery, sponsor_service: SponsorService, users) -> None:
+async def check_sponsors(callback: CallbackQuery, sponsor_service: SponsorService, users, settings) -> None:
     await callback.answer()
-    await _sponsor_screen(callback.message, sponsor_service, users, callback.from_user.id, edit=True)
+    await _sponsor_screen(callback.message, sponsor_service, users, callback.from_user.id, edit=True, settings=settings)
 
 
 @router.callback_query(F.data == "home")
-async def home(callback: CallbackQuery, users) -> None:
-    await _show_home(callback.message, users, callback.from_user.id, edit=True)
+async def home(callback: CallbackQuery, users, settings) -> None:
+    await _show_home(callback.message, users, callback.from_user.id, edit=True, settings=settings)
     await callback.answer()
 
 
