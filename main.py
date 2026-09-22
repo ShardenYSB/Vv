@@ -18,6 +18,7 @@ from op_bot.handlers.core import router as core_router
 from op_bot.link_resolver import LinkResolver
 from op_bot.resource_blocks import ResourceBlockService
 from op_bot.sponsors import SponsorService
+from op_bot.tgrass import TgrassService
 
 
 async def run() -> None:
@@ -36,6 +37,7 @@ async def run() -> None:
                 blocks=blocks,
                 admin_service=AdminService(sessions),
                 settings=settings,
+                tgrass=TgrassService(settings.tgrass_token, http_session) if settings.tgrass_token else None,
             )
             dispatcher.include_router(core_router)
             dispatcher.include_router(admin_router)

@@ -9,6 +9,7 @@ from os import environ
 class Settings:
     bot_token: str
     botohub_token: str
+    tgrass_token: str | None
     database_url: str
     redis_url: str | None
     admin_ids: frozenset[int]
@@ -38,6 +39,7 @@ class Settings:
         return cls(
             bot_token=required["BOT_TOKEN"],
             botohub_token=required["BOTOHUB_TOKEN"],
+            tgrass_token=environ.get("TGRASS_TOKEN", "").strip() or None,
             database_url=required["DATABASE_URL"],
             redis_url=environ.get("REDIS_URL"),
             admin_ids=admin_ids,

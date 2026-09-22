@@ -50,6 +50,8 @@ from op_bot.rewards import get_referral_reward
 from op_bot.config import Settings
 from op_bot.admin_ui import admin_home
 from op_bot.keyboards.admin import screen_markup
+from op_bot.tgrass import TgrassUser
+from op_bot.handlers.core import _safe_offer_url
 
 def test_referral_rewards_follow_configured_ranges():
     assert [get_referral_reward(value) for value in (0, 2, 3, 5, 6, 8, 9, 15, 16, 20, 21)] == [0, 0, 1, 1, 2, 2, 3, 3, 5, 5, 0]
@@ -83,3 +85,11 @@ def test_admin_dashboard_is_an_inline_keyboard():
     markup = screen_markup(screen)
     assert "Пользователей: 1" in screen.text
     assert any(button.callback_data == "admin:blocked" for row in markup.inline_keyboard for button in row)
+
+
+def test_tgrass_user_payload_and_safe_offer_links():
+    user = TgrassUser(123, "alice", None, True)
+    assert user.payload() == {"tg_user_id": 123, "tg_login": "alice", "lang": "ru", "is_premium": True}
+    assert _safe_offer_url("https://t.me/channel") == "https://t.me/channel"
+    assert _safe_offer_url("http://example.test") is None
+    assert _safe_offer_url("https://user:pass@example.test") is None
